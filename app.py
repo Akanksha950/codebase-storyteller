@@ -1,31 +1,39 @@
-from flask import Flask
+import os
+from flask import Flask, render_template, request
 from analyzer.repo_parser import clone_repo, get_structure
+from analyzer.tech_detector import detect_tech_stack
+from analyzer.storyteller import generate_summary
+from analyzer.code_health import calculate_health
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def home():
-    repo_url = "https://github.com/pallets/flask"
+    result = None
+    error = None
 
-    repo_path = clone_repo(repo_url)
-    folders, files = get_structure(repo_path)
+    if request.method == "POST":
+        repo_url = request.form.get("repo_url", "").strip()
+        try:
+            repo_path = clone_repo(repo_url)
+            folders, files = get_structure(repo_path)
+            tech_stack = detect_tech_stack(repo_path)
+            summary = generate_summary(repo_url, folders, files, tech_stack)
+            health_score, breakdown = calculate_health(repo_path, folders, files)
 
-    return f"""
-    <h1>Codebase Storyteller</h1>
+            result = {
+                "repo_url": repo_url,
+                "folders": folders,
+                "files": files,
+                "tech_stack": tech_stack,
+                "summary": summary,
+                "health_score": health_score,
+                "breakdown": breakdown,
+            }
+        except Exception as e:
+            error = str(e)
 
-    <h2>Repository</h2>
-    <p>{repo_url}</p>
-
-    <h2>Folders</h2>
-    <ul>
-        {''.join([f'<li>{folder}</li>' for folder in folders])}
-    </ul>
-
-    <h2>Files</h2>
-    <ul>
-        {''.join([f'<li>{file}</li>' for file in files])}
-    </ul>
-    """
+    return render_template("index.html", result=result, error=error)
 
 if __name__ == "__main__":
     app.run(debug=True)
