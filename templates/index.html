@@ -315,10 +315,10 @@ window.addEventListener('load', () => {
   {% if result %}
   // Results — animate in sequence
   gsap.from('.repo-header', { duration: 0.5, opacity: 0, y: 20, delay: 0.1, ease: "power2.out" });
-  gsap.from('.btn-roast',   { duration: 0.5, opacity: 0, scale: 0.95, delay: 0.2, ease: "back.out(1.7)" });
-  gsap.from('.stat-card',   { duration: 0.5, opacity: 0, y: 30, stagger: 0.12, delay: 0.3, ease: "power2.out" });
-  gsap.from('#aiBox',       { duration: 0.6, opacity: 0, y: 30, delay: 0.8, ease: "power2.out" });
-  gsap.from('.card',        { duration: 0.5, opacity: 0, y: 20, stagger: 0.1, delay: 1.0, ease: "power2.out" });
+  gsap.fromTo('.btn-roast', { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.5, delay: 0.2, ease: "back.out(1.7)" });
+  gsap.fromTo('.stat-card', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.12, delay: 0.3, ease: "power2.out" });
+  gsap.fromTo('#aiBox',     { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, delay: 0.8, ease: "power2.out" });
+  gsap.fromTo('.card',      { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, delay: 1.0, ease: "power2.out" });
   {% endif %}
 });
 </script>
