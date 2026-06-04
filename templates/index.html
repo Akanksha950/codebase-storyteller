@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Codebase Storyteller</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0f1117; font-family: 'Segoe UI', sans-serif; color: #fff; min-height: 100vh; }
@@ -14,32 +16,56 @@
     .logo-icon { width: 32px; height: 32px; background: #1D9E75; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
     .logo-text { font-size: 18px; font-weight: 600; }
     .logo-text span { color: #5DCAA5; }
+    .nav-links { display: flex; align-items: center; gap: 12px; }
     .nav-badge { font-size: 12px; background: rgba(93,202,165,0.15); color: #5DCAA5; border: 1px solid rgba(93,202,165,0.3); border-radius: 20px; padding: 4px 12px; }
+    .nav-github { font-size: 12px; color: rgba(255,255,255,0.5); text-decoration: none; display: flex; align-items: center; gap: 5px; }
+    .nav-github:hover { color: #fff; }
 
     .hero { padding: 60px 32px 40px; text-align: center; }
     .hero h1 { font-size: 32px; font-weight: 700; margin-bottom: 10px; }
     .hero h1 span { color: #5DCAA5; }
     .hero p { font-size: 15px; color: rgba(255,255,255,0.45); margin-bottom: 32px; }
 
-    .search-form { display: flex; gap: 10px; max-width: 580px; margin: 0 auto; }
-    .search-form input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #fff; outline: none; }
+    .search-form { display: flex; gap: 10px; max-width: 580px; margin: 0 auto 16px; }
+    .search-form input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #fff; outline: none; transition: border 0.2s; }
     .search-form input:focus { border-color: #1D9E75; }
     .search-form input::placeholder { color: rgba(255,255,255,0.3); }
-    .btn-analyze { background: #1D9E75; border: none; border-radius: 10px; padding: 12px 24px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .btn-analyze:hover { background: #17856200; }
+    .btn-analyze { background: #1D9E75; border: none; border-radius: 10px; padding: 12px 24px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
+    .btn-analyze:hover { background: #17856a; }
+    .btn-analyze:disabled { background: #0d4d3a; cursor: not-allowed; }
 
-    .error { background: rgba(240,149,149,0.1); border: 1px solid rgba(240,149,149,0.3); border-radius: 10px; padding: 16px; margin: 0 32px; color: #F09595; font-size: 14px; }
+    .example-links { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .example-link { font-size: 11px; color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 4px 12px; cursor: pointer; transition: all 0.2s; }
+    .example-link:hover { color: #5DCAA5; border-color: rgba(93,202,165,0.3); }
+
+    .loading-overlay { display: none; text-align: center; padding: 60px 32px; }
+    .spinner { width: 40px; height: 40px; border: 3px solid rgba(93,202,165,0.2); border-top-color: #5DCAA5; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: rgba(255,255,255,0.4); }
+    .loading-steps { font-size: 12px; color: rgba(93,202,165,0.6); margin-top: 8px; }
+
+    .error { background: rgba(240,149,149,0.1); border: 1px solid rgba(240,149,149,0.3); border-radius: 10px; padding: 16px; margin: 0 32px 20px; color: #F09595; font-size: 14px; }
 
     .results { padding: 0 32px 40px; max-width: 1000px; margin: 0 auto; }
 
+    .repo-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 14px 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; }
+    .repo-url { font-size: 13px; color: #5DCAA5; text-decoration: none; }
+    .repo-url:hover { text-decoration: underline; }
+    .btn-copy { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 6px 14px; color: rgba(255,255,255,0.6); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s; }
+    .btn-copy:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .btn-copy.copied { color: #5DCAA5; border-color: rgba(93,202,165,0.3); }
+
+    /* Stats — opacity:1 always, GSAP animates from 0 */
     .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-    .stat-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; text-align: center; }
+    .stat-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; text-align: center; transition: border 0.2s; }
+    .stat-card:hover { border-color: rgba(255,255,255,0.15); }
     .stat-label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .stat-value { font-size: 24px; font-weight: 700; }
+    .stat-value { font-size: 28px; font-weight: 700; }
     .green { color: #5DCAA5; }
     .amber { color: #EF9F27; }
     .blue { color: #85B7EB; }
     .white { color: #fff; }
+    .red { color: #F09595; }
 
     .ai-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(93,202,165,0.25); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
     .ai-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; background: rgba(93,202,165,0.12); color: #5DCAA5; border-radius: 20px; padding: 4px 12px; margin-bottom: 12px; }
@@ -47,10 +73,10 @@
 
     .cards-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 18px; }
-    .card-title { font-size: 12px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+    .card-title { font-size: 12px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
 
     .tech-pills { display: flex; flex-wrap: wrap; gap: 8px; }
-    .tech-pill { font-size: 12px; padding: 5px 12px; border-radius: 20px; font-weight: 500; background: rgba(93,202,165,0.12); color: #5DCAA5; border: 1px solid rgba(93,202,165,0.25); }
+    .tech-pill { font-size: 12px; padding: 5px 14px; border-radius: 20px; font-weight: 500; background: rgba(93,202,165,0.12); color: #5DCAA5; border: 1px solid rgba(93,202,165,0.25); }
 
     .file-list { list-style: none; }
     .file-list li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.6); padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -59,12 +85,27 @@
     .health-bar-wrap { margin-bottom: 12px; }
     .health-label { display: flex; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
     .health-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
-    .health-fill { height: 100%; border-radius: 4px; background: #5DCAA5; }
+    .health-fill { height: 100%; border-radius: 4px; }
+    .fill-100 { background: #5DCAA5; width: 100%; }
+    .fill-80  { background: #5DCAA5; width: 80%; }
+    .fill-60  { background: #EF9F27; width: 60%; }
+    .fill-20  { background: #F09595; width: 20%; }
+    .fill-0   { background: #F09595; width: 0%; }
 
-    .score-big { font-size: 42px; font-weight: 700; color: #5DCAA5; text-align: center; margin: 10px 0 4px; }
+    .score-big { font-size: 48px; font-weight: 700; text-align: center; margin: 10px 0 4px; }
     .score-sub { font-size: 12px; color: rgba(255,255,255,0.35); text-align: center; }
 
-    .loading { text-align: center; padding: 40px; color: rgba(255,255,255,0.4); font-size: 14px; display: none; }
+    /* Roast */
+    .btn-roast { background: rgba(240,149,149,0.1); border: 1px solid rgba(240,149,149,0.3); border-radius: 10px; padding: 12px 20px; color: #F09595; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 20px; transition: all 0.2s; width: 100%; }
+    .btn-roast:hover { background: rgba(240,149,149,0.2); transform: scale(1.01); }
+    .roast-box { background: rgba(240,149,149,0.06); border: 1px solid rgba(240,149,149,0.25); border-radius: 14px; padding: 20px; margin-bottom: 20px; display: none; }
+    .roast-box.active { display: block; }
+    .roast-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; background: rgba(240,149,149,0.12); color: #F09595; border-radius: 20px; padding: 4px 12px; margin-bottom: 12px; }
+    .roast-text { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.8; white-space: pre-line; }
+
+    .footer { text-align: center; padding: 32px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 20px; }
+    .footer p { font-size: 12px; color: rgba(255,255,255,0.2); }
+    .footer span { color: #5DCAA5; }
   </style>
 </head>
 <body>
@@ -74,27 +115,64 @@
     <div class="logo-icon"><i class="ti ti-book-2" style="color:#fff;font-size:18px"></i></div>
     <div class="logo-text">Codebase<span>Storyteller</span></div>
   </div>
-  <span class="nav-badge">✦ AI Powered</span>
+  <div class="nav-links">
+    <a href="https://github.com" target="_blank" class="nav-github"><i class="ti ti-brand-github"></i> GitHub</a>
+    <span class="nav-badge">✦ AI Powered</span>
+  </div>
 </nav>
 
 <div class="hero">
   <h1>Understand any <span>GitHub repo</span> instantly</h1>
   <p>Paste a GitHub URL — get AI summary, tech stack, structure & health score in seconds</p>
-  <form class="search-form" method="POST" onsubmit="showLoading()">
-    <input type="text" name="repo_url" placeholder="https://github.com/username/repo" required
+  <form class="search-form" method="POST" onsubmit="startLoading()">
+    <input type="text" name="repo_url" id="repoInput" placeholder="https://github.com/username/repo" required
       value="{{ result.repo_url if result else '' }}" />
-    <button type="submit" class="btn-analyze">Analyze ↗</button>
+    <button type="submit" class="btn-analyze" id="analyzeBtn">
+      <i class="ti ti-telescope"></i> Analyze
+    </button>
   </form>
+  <div class="example-links">
+    <span style="font-size:11px;color:rgba(255,255,255,0.2);">Try:</span>
+    <span class="example-link" onclick="setRepo('https://github.com/pallets/flask')">pallets/flask</span>
+    <span class="example-link" onclick="setRepo('https://github.com/psf/requests')">psf/requests</span>
+    <span class="example-link" onclick="setRepo('https://github.com/facebook/react')">facebook/react</span>
+    <span class="example-link" onclick="setRepo('https://github.com/torvalds/linux')">torvalds/linux</span>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Analyzing repository...</div>
+  <div class="loading-steps">Cloning → Reading structure → Detecting tech → Generating AI summary</div>
 </div>
 
 {% if error %}
-<div class="error">⚠️ Error: {{ error }}</div>
+<div class="error">⚠️ {{ error }}</div>
 {% endif %}
 
 {% if result %}
 <div class="results">
 
-  <div class="stats-row">
+  <div class="repo-header">
+    <a class="repo-url" href="{{ result.repo_url }}" target="_blank">
+      <i class="ti ti-brand-github" style="margin-right:6px"></i>{{ result.repo_url }}
+    </a>
+    <button class="btn-copy" id="copyBtn" onclick="copyReport()">
+      <i class="ti ti-copy"></i> Copy Report
+    </button>
+  </div>
+
+  <!-- Roast Button -->
+  <button class="btn-roast" id="roastBtn" onclick="showRoast()">
+    🔥 Roast this Repo — Let AI judge it brutally!
+  </button>
+  <div class="roast-box" id="roastBox">
+    <div class="roast-badge">🔥 AI Roast</div>
+    <div class="roast-text">{{ result.roast }}</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="statsRow">
     <div class="stat-card">
       <div class="stat-label">Folders</div>
       <div class="stat-value blue">{{ result.folders | length }}</div>
@@ -105,7 +183,9 @@
     </div>
     <div class="stat-card">
       <div class="stat-label">Health Score</div>
-      <div class="stat-value green">{{ result.health_score }}%</div>
+      <div class="stat-value {% if result.health_score >= 80 %}green{% elif result.health_score >= 60 %}amber{% else %}red{% endif %}">
+        {{ result.health_score }}%
+      </div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Tech Detected</div>
@@ -113,14 +193,14 @@
     </div>
   </div>
 
-  <div class="ai-box">
-    <div class="ai-badge">✦ AI Summary</div>
+  <div class="ai-box" id="aiBox">
+    <div class="ai-badge"><i class="ti ti-sparkles" style="font-size:12px"></i> AI Summary</div>
     <div class="ai-text">{{ result.summary }}</div>
   </div>
 
   <div class="cards-row">
     <div class="card">
-      <div class="card-title">⚙ Tech Stack</div>
+      <div class="card-title"><i class="ti ti-cpu"></i> Tech Stack</div>
       <div class="tech-pills">
         {% for tech in result.tech_stack %}
         <span class="tech-pill">{{ tech }}</span>
@@ -128,12 +208,14 @@
       </div>
     </div>
     <div class="card">
-      <div class="card-title">♥ Code Health</div>
-      <div class="score-big">{{ result.health_score }}</div>
+      <div class="card-title"><i class="ti ti-heart-rate-monitor"></i> Code Health</div>
+      <div class="score-big {% if result.health_score >= 80 %}green{% elif result.health_score >= 60 %}amber{% else %}red{% endif %}">
+        {{ result.health_score }}
+      </div>
       <div class="score-sub">
-        {% if result.health_score >= 80 %}Excellent — well maintained
-        {% elif result.health_score >= 60 %}Good — decent structure
-        {% else %}Needs improvement
+        {% if result.health_score >= 80 %}✅ Excellent — well maintained
+        {% elif result.health_score >= 60 %}⚠️ Good — decent structure
+        {% else %}❌ Needs improvement
         {% endif %}
       </div>
     </div>
@@ -141,7 +223,7 @@
 
   <div class="cards-row">
     <div class="card">
-      <div class="card-title">📁 Folders</div>
+      <div class="card-title"><i class="ti ti-folder"></i> Folders</div>
       <ul class="file-list">
         {% for folder in result.folders[:8] %}
         <li>📂 {{ folder }}</li>
@@ -149,18 +231,20 @@
       </ul>
     </div>
     <div class="card">
-      <div class="card-title">📊 Health Breakdown</div>
+      <div class="card-title"><i class="ti ti-activity"></i> Health Breakdown</div>
       {% for key, val in result.breakdown.items() %}
       <div class="health-bar-wrap">
         <div class="health-label"><span>{{ key }}</span><span>{{ val }}%</span></div>
-        <div class="health-bar"><div class="health-fill" style="width: {{ val }}%"></div></div>
+        <div class="health-bar">
+          <div class="health-fill fill-{{ val }}"></div>
+        </div>
       </div>
       {% endfor %}
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">📄 Files</div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title"><i class="ti ti-files"></i> Files</div>
     <ul class="file-list" style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px;">
       {% for file in result.files[:12] %}
       <li>📄 {{ file }}</li>
@@ -171,11 +255,72 @@
 </div>
 {% endif %}
 
+<footer class="footer">
+  <p>Built with ❤️ by <span>Codebase Storyteller</span> • Powered by <span>Groq AI</span> • Open Source Hackathon 2026</p>
+</footer>
+
 <script>
-function showLoading() {
-  document.querySelector('.btn-analyze').innerText = 'Analyzing...';
-  document.querySelector('.btn-analyze').disabled = true;
+function setRepo(url) {
+  document.getElementById('repoInput').value = url;
 }
+
+function startLoading() {
+  document.getElementById('loadingOverlay').style.display = 'block';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('analyzeBtn').innerHTML = '<i class="ti ti-loader"></i> Analyzing...';
+  document.querySelector('.hero').style.opacity = '0.4';
+}
+
+function showRoast() {
+  const box = document.getElementById('roastBox');
+  const btn = document.getElementById('roastBtn');
+  box.classList.add('active');
+  btn.style.display = 'none';
+  gsap.from('#roastBox', { duration: 0.6, opacity: 0, y: 30, ease: "back.out(1.7)" });
+  gsap.to('#roastBox', { duration: 0.08, x: -6, repeat: 6, yoyo: true, ease: "power1.inOut", delay: 0.4 });
+}
+
+function copyReport() {
+  {% if result %}
+  const report = `🔍 Codebase Storyteller Report
+Repository: {{ result.repo_url }}
+Health Score: {{ result.health_score }}%
+Tech Stack: {{ result.tech_stack | join(', ') }}
+Folders: {{ result.folders | length }} | Files: {{ result.files | length }}
+
+AI Summary:
+{{ result.summary }}
+
+Generated by Codebase Storyteller`;
+  navigator.clipboard.writeText(report).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.innerHTML = '<i class="ti ti-check"></i> Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = '<i class="ti ti-copy"></i> Copy Report';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+  {% endif %}
+}
+
+// GSAP Animations — run after page loads
+window.addEventListener('load', () => {
+  // Hero
+  gsap.from('.hero h1',       { duration: 0.8, opacity: 0, y: -30, ease: "power2.out" });
+  gsap.from('.hero p',        { duration: 0.8, opacity: 0, y: -20, delay: 0.2, ease: "power2.out" });
+  gsap.from('.search-form',   { duration: 0.8, opacity: 0, y: 20,  delay: 0.4, ease: "power2.out" });
+  gsap.from('.example-links', { duration: 0.8, opacity: 0,         delay: 0.6, ease: "power2.out" });
+
+  {% if result %}
+  // Results — animate in sequence
+  gsap.from('.repo-header', { duration: 0.5, opacity: 0, y: 20, delay: 0.1, ease: "power2.out" });
+  gsap.from('.btn-roast',   { duration: 0.5, opacity: 0, scale: 0.95, delay: 0.2, ease: "back.out(1.7)" });
+  gsap.from('.stat-card',   { duration: 0.5, opacity: 0, y: 30, stagger: 0.12, delay: 0.3, ease: "power2.out" });
+  gsap.from('#aiBox',       { duration: 0.6, opacity: 0, y: 30, delay: 0.8, ease: "power2.out" });
+  gsap.from('.card',        { duration: 0.5, opacity: 0, y: 20, stagger: 0.1, delay: 1.0, ease: "power2.out" });
+  {% endif %}
+});
 </script>
 
 </body>

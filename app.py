@@ -4,6 +4,7 @@ from analyzer.repo_parser import clone_repo, get_structure
 from analyzer.tech_detector import detect_tech_stack
 from analyzer.storyteller import generate_summary
 from analyzer.code_health import calculate_health
+from analyzer.roaster import roast_repo
 
 app = Flask(__name__)
 
@@ -21,6 +22,11 @@ def home():
             summary = generate_summary(repo_url, folders, files, tech_stack)
             health_score, breakdown = calculate_health(repo_path, folders, files)
 
+            try:
+                roast = roast_repo(repo_url, folders, files, tech_stack, health_score)
+            except Exception as roast_err:
+                roast = f"AI roaster took a day off 😴 ({str(roast_err)})"
+
             result = {
                 "repo_url": repo_url,
                 "folders": folders,
@@ -29,6 +35,7 @@ def home():
                 "summary": summary,
                 "health_score": health_score,
                 "breakdown": breakdown,
+                "roast": roast,
             }
         except Exception as e:
             error = str(e)
